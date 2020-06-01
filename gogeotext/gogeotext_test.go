@@ -107,6 +107,7 @@ func TestMatchCityWithDefault(t *testing.T) {
 	geoText := NewGeoTextLocator(p, "", "./data/cities500.txt", "./data/default_city.csv")
 	location, _ := geoText.MatchCity("wellington")
 
+	//Check for default
 	if location.countryCode == "NZ" {
 		fmt.Println(location)
 	} else {
@@ -118,9 +119,33 @@ func TestMatchCityWithDefault(t *testing.T) {
 		t.Error("Cannot find")
 	}
 
+	//Check for default
 	if location.countryCode == "US" {
 		fmt.Println(location)
 	} else {
 		t.Error("Cannot find city")
+	}
+
+	//Check if city not present
+	_, present = geoText.MatchCity("RubbishCity")
+	if present != false {
+		t.Error("Found Rubbish City")
+	}
+}
+
+func TestMatchCityCountry(t *testing.T) {
+	var p Prose
+	geoText := NewGeoTextLocator(p, "", "./data/cities500.txt", "./data/default_city.csv")
+
+	//Wellignton if given India
+	results := geoText.MatchCityCoutry("wellington", []string{"IN"})
+	if len(results) != 1 && results[0].countryCode == "IN" {
+		t.Error("Should be 1")
+	}
+
+	//
+	results = geoText.MatchCityCoutry("wellington", []string{"SG"})
+	if len(results) != 0 {
+		t.Error("Should be 0 instead")
 	}
 }

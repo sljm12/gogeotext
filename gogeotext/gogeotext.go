@@ -191,6 +191,26 @@ func (g GeoTextLocator) MatchDefaultCity(token string) (DefaultCity, bool) {
 }
 
 /*
+MatchCityCoutry match a city given a list of country
+*/
+func (g GeoTextLocator) MatchCityCoutry(token string, countries []string) []Location {
+	cities, present := g.citiesMap[token]
+	result := make([]Location, 0)
+
+	if present == true {
+		for _, value := range cities {
+			for _, c := range countries {
+				if value.countryCode == c {
+					result = append(result, value)
+				}
+			}
+		}
+	}
+
+	return result
+}
+
+/*
 NewGeoTextLocator - Create new GeoTextLocator
 */
 func NewGeoTextLocator(e NERExtractor, countryFile string, citiesFiles string, defaultCity string) GeoTextLocator {
