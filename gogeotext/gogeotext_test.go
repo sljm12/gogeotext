@@ -15,18 +15,38 @@ func inStringArray(value string, arr []string) bool {
 	return false
 }
 
-func TestProseExtract(t *testing.T) {
+func TestProse(t *testing.T) {
+	var p Prose
+
+	s := p.Extract("San Diego is a great place to live.")
+	if inStringArray("San Diego", s) != true {
+		t.Error("San Diego not found")
+	}
+
+	s = p.Extract("San Diego, Mexico is a great place to live.")
+	if inStringArray("San Diego", s) != true {
+		t.Error("San Diego not found")
+	}
+
+	if inStringArray("Mexico", s) != true {
+		t.Error("Mexico not found")
+	}
+}
+
+func TestGTLExtract(t *testing.T) {
 	var p Prose
 
 	var gtl GeoTextLocator
-	gtl.extractor = p
+	gtl = NewGeoTextLocator(p, "./data/alternateName.csv", "./data/cities500.txt", "./data/default_city.csv")
+
+	//Test Singapore
 	results := gtl.ExtractGeoLocation("Singaporeans and Singapore are one")
-	if len(results) != 1 {
+	if len(results.Countries) != 1 {
 		t.Error("Results are wrong")
 	}
 
-	if inStringArray("Singapore", results) == false {
-		t.Error("Singapre not in answer")
+	if results.Countries[0].countryCode != "SG" {
+		t.Error("Country are wrong")
 	}
 }
 
@@ -69,7 +89,7 @@ func TestReadCSV_CountryData(t *testing.T) {
 
 func TestMatchCountry(t *testing.T) {
 	var p Prose
-	geoText := NewGeoTextLocator(p, "./data/alternateName.csv", "", "")
+	geoText := NewGeoTextLocator(p, "./data/alternateName.csv", "./data/cities500.txt", "./data/default_city.csv")
 	location, err := geoText.MatchCountry("singapore")
 
 	if err == nil {
@@ -98,7 +118,7 @@ func TestMatchReadDefaultCity(t *testing.T) {
 
 func TestMatchDefaultCity(t *testing.T) {
 	var p Prose
-	geoText := NewGeoTextLocator(p, "", "", "./data/default_city.csv")
+	geoText := NewGeoTextLocator(p, "./data/alternateName.csv", "./data/cities500.txt", "./data/default_city.csv")
 	location, present := geoText.MatchDefaultCity("wellington")
 
 	if present == true {
@@ -110,7 +130,7 @@ func TestMatchDefaultCity(t *testing.T) {
 
 func TestMatchCityWithDefault(t *testing.T) {
 	var p Prose
-	geoText := NewGeoTextLocator(p, "", "./data/cities500.txt", "./data/default_city.csv")
+	geoText := NewGeoTextLocator(p, "./data/alternateName.csv", "./data/cities500.txt", "./data/default_city.csv")
 	location, _ := geoText.MatchCity("wellington")
 
 	//Check for default
@@ -148,7 +168,7 @@ func TestMatchCityWithDefault(t *testing.T) {
 
 func TestMatchCityCountry(t *testing.T) {
 	var p Prose
-	geoText := NewGeoTextLocator(p, "", "./data/cities500.txt", "./data/default_city.csv")
+	geoText := NewGeoTextLocator(p, "./data/alternateName.csv", "./data/cities500.txt", "./data/default_city.csv")
 
 	//Wellignton if given India
 	results := geoText.MatchCityCoutry("wellington", []string{"IN"})
@@ -165,7 +185,7 @@ func TestMatchCityCountry(t *testing.T) {
 
 func TestFindCityCountry(t *testing.T) {
 	var p Prose
-	geoText := NewGeoTextLocator(p, "", "./data/cities500.txt", "./data/default_city.csv")
+	geoText := NewGeoTextLocator(p, "./data/alternateName.csv", "./data/cities500.txt", "./data/default_city.csv")
 
 	//Find a correct city
 	city, present := geoText.FindCity("wellington", "NZ")
@@ -185,5 +205,4 @@ func TestFindCityCountry(t *testing.T) {
 	if present == true {
 		t.Error("City not suppose to be found")
 	}
-
 }

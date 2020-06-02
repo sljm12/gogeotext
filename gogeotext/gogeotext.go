@@ -144,10 +144,37 @@ type GeoTextLocator struct {
 }
 
 /*
+GeoTextLocatorResults - The results from GeoTextLocator
+*/
+type GeoTextLocatorResults struct {
+	Countries []Location
+	Cities    []Location
+}
+
+/*
 ExtractGeoLocation - Extracts geolocation from string
 */
-func (g GeoTextLocator) ExtractGeoLocation(text string) []string {
-	results := g.extractor.Extract(text)
+func (g GeoTextLocator) ExtractGeoLocation(text string) GeoTextLocatorResults {
+	tokens := g.extractor.Extract(text)
+	var results GeoTextLocatorResults
+
+	//Find countries
+	for _, r := range tokens {
+		lower := strings.ToLower(r)
+		country := g.countryMap[lower]
+		if country != nil {
+			results.Countries = append(results.Countries, country[0])
+		}
+	}
+
+	//Find cities
+	for _, r := range tokens {
+		city, present := g.MatchCity(r)
+		if present == true {
+			results.Cities = append(results.Countries, city)
+		}
+	}
+
 	return results
 }
 
@@ -167,25 +194,24 @@ func (g GeoTextLocator) MatchCountry(token string) (Location, error) {
 /*
 MatchCity Matching city based on token
 */
-func (g GeoTextLocator) MatchCity(token string) (LocationResult, bool) {
+func (g GeoTextLocator) MatchCity(token string) (Location, bool) {
 	lowerToken := strings.ToLower(token)
 
 	//Match based on Default City
 	defaultCity, present := g.MatchDefaultCity(lowerToken)
 
 	if present {
-		return LocationResult{name: defaultCity.name, countryCode: defaultCity.country, class: "CITY"}, true
+		return g.FindCity(defaultCity.name, defaultCity.country)
 	}
 
 	//Match based on City
 	cities := g.citiesMap[token]
 	if cities != nil && len(cities) > 0 {
 		firstCity := cities[0]
-		return LocationResult{name: firstCity.name, countryCode: firstCity.countryCode,
-			lat: firstCity.lat, lon: firstCity.lon, class: "CITY"}, true
+		return firstCity, true
 	}
 
-	return LocationResult{}, false
+	return Location{}, false
 }
 
 /*
@@ -237,8 +263,18 @@ NewGeoTextLocator - Create new GeoTextLocator
 func NewGeoTextLocator(e NERExtractor, countryFile string, citiesFiles string, defaultCity string) GeoTextLocator {
 	var a GeoTextLocator
 	a.extractor = e
-	a.countryMap, _ = ReadCsv(countryFile, ',', 3, 4, 5, 1)
-	a.citiesMap, _ = ReadCsv(citiesFiles, '\t', 4, 5, 2, 8)
-	a.defaultCity, _ = ReadCSVDefaultCity(defaultCity)
+	var err error
+	a.countryMap, err = ReadCsv(countryFile, ',', 3, 4, 5, 1)
+	if err != nil {
+		panic(err)
+	}
+	a.citiesMap, err = ReadCsv(citiesFiles, '\t', 4, 5, 2, 8)
+	if err != nil {
+		panic(err)
+	}
+	a.defaultCity, err = ReadCSVDefaultCity(defaultCity)
+	if err != nil {
+		panic(err)
+	}
 	return a
 }
