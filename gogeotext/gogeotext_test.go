@@ -77,6 +77,12 @@ func TestMatchCountry(t *testing.T) {
 	} else {
 		t.Error("Cannot find country")
 	}
+
+	location, err = geoText.MatchCountry("rubbish country")
+
+	if err == nil {
+		t.Error("Not suppose to find country")
+	}
 }
 
 func TestMatchReadDefaultCity(t *testing.T) {
@@ -131,6 +137,13 @@ func TestMatchCityWithDefault(t *testing.T) {
 	if present != false {
 		t.Error("Found Rubbish City")
 	}
+
+	//Test matching of only one city and in lower case
+	_, present = geoText.MatchCity("soldeu")
+
+	if present != true {
+		t.Error("Suppose to find the city")
+	}
 }
 
 func TestMatchCityCountry(t *testing.T) {
@@ -148,4 +161,29 @@ func TestMatchCityCountry(t *testing.T) {
 	if len(results) != 0 {
 		t.Error("Should be 0 instead")
 	}
+}
+
+func TestFindCityCountry(t *testing.T) {
+	var p Prose
+	geoText := NewGeoTextLocator(p, "", "./data/cities500.txt", "./data/default_city.csv")
+
+	//Find a correct city
+	city, present := geoText.FindCity("wellington", "NZ")
+
+	if present == false {
+		t.Error("City not found")
+	} else {
+		if city.name != "wellington" && city.countryCode != "NZ" {
+			t.Error("Wrong City")
+		}
+	}
+	fmt.Println(city)
+
+	//Test if the city cannot be found
+	city, present = geoText.FindCity("rubbish", "SG")
+
+	if present == true {
+		t.Error("City not suppose to be found")
+	}
+
 }

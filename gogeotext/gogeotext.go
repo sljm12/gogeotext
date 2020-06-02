@@ -64,6 +64,8 @@ type LocationResult struct {
 	class       string
 	name        string
 	countryCode string
+	lat         float64
+	lon         float64
 }
 
 /*
@@ -167,16 +169,20 @@ MatchCity Matching city based on token
 */
 func (g GeoTextLocator) MatchCity(token string) (LocationResult, bool) {
 	lowerToken := strings.ToLower(token)
+
+	//Match based on Default City
 	defaultCity, present := g.MatchDefaultCity(lowerToken)
 
 	if present {
 		return LocationResult{name: defaultCity.name, countryCode: defaultCity.country, class: "CITY"}, true
 	}
 
-	cities, present := g.citiesMap[lowerToken]
-	if present {
+	//Match based on City
+	cities := g.citiesMap[token]
+	if cities != nil && len(cities) > 0 {
 		firstCity := cities[0]
-		return LocationResult{name: firstCity.name, class: "CITY", countryCode: firstCity.countryCode}, true
+		return LocationResult{name: firstCity.name, countryCode: firstCity.countryCode,
+			lat: firstCity.lat, lon: firstCity.lon, class: "CITY"}, true
 	}
 
 	return LocationResult{}, false
@@ -188,6 +194,21 @@ MatchDefaultCity Match a default city
 func (g GeoTextLocator) MatchDefaultCity(token string) (DefaultCity, bool) {
 	value, present := g.defaultCity[token]
 	return value, present
+}
+
+/*
+FindCity
+Find City given the name and country
+*/
+func (g GeoTextLocator) FindCity(name string, country string) (Location, bool) {
+	cities := g.citiesMap[name]
+	for _, v := range cities {
+		if v.countryCode == country {
+			return v, true
+		}
+	}
+
+	return Location{}, false
 }
 
 /*
