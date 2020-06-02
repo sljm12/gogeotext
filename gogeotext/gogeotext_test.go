@@ -48,6 +48,25 @@ func TestGTLExtract(t *testing.T) {
 	if results.Countries[0].countryCode != "SG" {
 		t.Error("Country are wrong")
 	}
+
+	//Test San Diego and Mexico extraction
+	results = gtl.ExtractGeoLocation("San Diego, Mexico are great places to live")
+	if len(results.Countries) != 1 {
+		t.Error("Results are wrong")
+	}
+
+	if results.Countries[0].countryCode != "MX" {
+		t.Error("Country are wrong")
+	}
+
+	if len(results.Cities) != 1 {
+		t.Error("Results are wrong")
+	}
+
+	if results.Cities[0].name != "san diego" {
+		t.Error("Results are wrong")
+	}
+
 }
 
 func TestReadCSV_CitiesData(t *testing.T) {

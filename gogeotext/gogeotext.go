@@ -157,21 +157,27 @@ ExtractGeoLocation - Extracts geolocation from string
 func (g GeoTextLocator) ExtractGeoLocation(text string) GeoTextLocatorResults {
 	tokens := g.extractor.Extract(text)
 	var results GeoTextLocatorResults
+	usedTokens := make([]bool, len(tokens))
 
 	//Find countries
-	for _, r := range tokens {
+	for i, r := range tokens {
 		lower := strings.ToLower(r)
 		country := g.countryMap[lower]
 		if country != nil {
 			results.Countries = append(results.Countries, country[0])
+			usedTokens[i] = true
+		} else {
+			usedTokens[i] = false
 		}
 	}
 
 	//Find cities
-	for _, r := range tokens {
-		city, present := g.MatchCity(r)
-		if present == true {
-			results.Cities = append(results.Countries, city)
+	for i, r := range tokens {
+		if usedTokens[i] == false {
+			city, present := g.MatchCity(r)
+			if present == true {
+				results.Cities = append(results.Cities, city)
+			}
 		}
 	}
 
