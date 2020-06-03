@@ -2,6 +2,7 @@ package gogeotext
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -64,6 +65,33 @@ func TestGTLExtract(t *testing.T) {
 	}
 
 	if results.Cities[0].name != "san diego" {
+		t.Error("Results are wrong")
+	}
+
+	if results.Cities[0].countryCode != "MX" {
+		t.Error("Results are wrong")
+	}
+
+	//Test wrong country and city
+
+	results = gtl.ExtractGeoLocation("San Diego, Singapore are great places to live")
+	if len(results.Countries) != 1 {
+		t.Error("Results are wrong")
+	}
+
+	if results.Countries[0].countryCode != "SG" {
+		t.Error("Country are wrong")
+	}
+
+	if len(results.Cities) != 1 {
+		t.Error("Results are wrong")
+	}
+
+	if results.Cities[0].name != "san diego" {
+		t.Error("Results are wrong")
+	}
+
+	if results.Cities[0].countryCode != "US" {
 		t.Error("Results are wrong")
 	}
 
@@ -150,7 +178,7 @@ func TestMatchDefaultCity(t *testing.T) {
 func TestMatchCityWithDefault(t *testing.T) {
 	var p Prose
 	geoText := NewGeoTextLocator(p, "./data/alternateName.csv", "./data/cities500.txt", "./data/default_city.csv")
-	location, _ := geoText.MatchCity("wellington")
+	location, _ := geoText.MatchCity("wellington", []Location{})
 
 	//Check for default
 	if location.countryCode == "NZ" {
@@ -159,7 +187,7 @@ func TestMatchCityWithDefault(t *testing.T) {
 		t.Error("Cannot find city")
 	}
 
-	location, present := geoText.MatchCity("San Diego")
+	location, present := geoText.MatchCity("San Diego", []Location{})
 	if present == false {
 		t.Error("Cannot find")
 	}
@@ -172,13 +200,13 @@ func TestMatchCityWithDefault(t *testing.T) {
 	}
 
 	//Check if city not present
-	_, present = geoText.MatchCity("RubbishCity")
+	_, present = geoText.MatchCity("RubbishCity", []Location{})
 	if present != false {
 		t.Error("Found Rubbish City")
 	}
 
 	//Test matching of only one city and in lower case
-	_, present = geoText.MatchCity("soldeu")
+	_, present = geoText.MatchCity("soldeu", []Location{})
 
 	if present != true {
 		t.Error("Suppose to find the city")
@@ -224,4 +252,9 @@ func TestFindCityCountry(t *testing.T) {
 	if present == true {
 		t.Error("City not suppose to be found")
 	}
+}
+
+func TestPkgPath(t *testing.T) {
+	var p Prose
+	fmt.Println(reflect.TypeOf(p).PkgPath())
 }

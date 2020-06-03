@@ -174,7 +174,7 @@ func (g GeoTextLocator) ExtractGeoLocation(text string) GeoTextLocatorResults {
 	//Find cities
 	for i, r := range tokens {
 		if usedTokens[i] == false {
-			city, present := g.MatchCity(r)
+			city, present := g.MatchCity(r, results.Countries)
 			if present == true {
 				results.Cities = append(results.Cities, city)
 			}
@@ -200,8 +200,16 @@ func (g GeoTextLocator) MatchCountry(token string) (Location, error) {
 /*
 MatchCity Matching city based on token
 */
-func (g GeoTextLocator) MatchCity(token string) (Location, bool) {
+func (g GeoTextLocator) MatchCity(token string, countryResults []Location) (Location, bool) {
 	lowerToken := strings.ToLower(token)
+
+	//Find a city using the countries that was detected earlier
+	for _, v := range countryResults {
+		location, present := g.FindCity(lowerToken, v.countryCode)
+		if present == true {
+			return location, true
+		}
+	}
 
 	//Match based on Default City
 	defaultCity, present := g.MatchDefaultCity(lowerToken)
@@ -283,4 +291,12 @@ func NewGeoTextLocator(e NERExtractor, countryFile string, citiesFiles string, d
 		panic(err)
 	}
 	return a
+}
+
+/*
+CreateDefaultGeoTextLocator - Create the default GeoTextLocator using the Prose NER
+*/
+func CreateDefaultGeoTextLocator(countryFile string, citiesFiles string, defaultCity string) GeoTextLocator {
+	var p Prose
+	return NewGeoTextLocator(p, countryFile, citiesFiles, defaultCity)
 }
