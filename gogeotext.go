@@ -1,3 +1,13 @@
+/*
+Package gogeotext extracts locations in the text and returns the lat, lon for that location.
+
+It is designed to use any NER engine, the default is using Prose NLP.
+
+It uses data from geonames for that base data.
+It tries to be "smart"
+
+if the text contains just "San Diego is a great place" it will return San Diego in the United States
+If the text contains "San Diego, Mexico is a great place" it will return San Diego in Mexico*/
 package gogeotext
 
 import (
@@ -42,30 +52,30 @@ func (Prose) Extract(s string) []string {
 Location - Represents a location
 */
 type Location struct {
-	lat         float64
-	lon         float64
-	name        string
-	countryCode string
-	geonameid   string
+	Lat         float64
+	Lon         float64
+	Name        string
+	CountryCode string
+	Geonameid   string
 }
 
 /*
 DefaultCity stuct for storing default city
 */
 type DefaultCity struct {
-	name    string
-	country string
+	Name    string
+	Country string
 }
 
 /*
 LocationResult struct for Extract Results
 */
 type LocationResult struct {
-	class       string
-	name        string
-	countryCode string
-	lat         float64
-	lon         float64
+	Class       string
+	Name        string
+	CountryCode string
+	Lat         float64
+	Lon         float64
 }
 
 /*
@@ -89,7 +99,7 @@ func ReadCsv(filename string, delimiter rune, latLoc int, lonLoc int, nameLoc in
 			lon, _ := strconv.ParseFloat(record[lonLoc], 64)
 			name := strings.ToLower(record[nameLoc])
 			countryCode := record[countryCodeLoc]
-			location := Location{lat: lat, lon: lon, name: name, countryCode: countryCode}
+			location := Location{Lat: lat, Lon: lon, Name: name, CountryCode: countryCode}
 
 			value := results[name]
 
@@ -126,7 +136,7 @@ func ReadCSVDefaultCity(filename string) (map[string]DefaultCity, error) {
 
 			name := strings.ToLower(record[1])
 			country := record[2]
-			defaultCities[strings.ToLower(name)] = DefaultCity{name: name, country: country}
+			defaultCities[strings.ToLower(name)] = DefaultCity{Name: name, Country: country}
 
 		}
 	}
@@ -137,10 +147,10 @@ func ReadCSVDefaultCity(filename string) (map[string]DefaultCity, error) {
 GeoTextLocator - Loads the data into this struct for processing
 */
 type GeoTextLocator struct {
-	extractor   NERExtractor
-	countryMap  map[string][]Location
-	citiesMap   map[string][]Location
-	defaultCity map[string]DefaultCity
+	Extractor   NERExtractor
+	CountryMap  map[string][]Location
+	CitiesMap   map[string][]Location
+	DefaultCity map[string]DefaultCity
 }
 
 /*
@@ -155,14 +165,14 @@ type GeoTextLocatorResults struct {
 ExtractGeoLocation - Extracts geolocation from string
 */
 func (g GeoTextLocator) ExtractGeoLocation(text string) GeoTextLocatorResults {
-	tokens := g.extractor.Extract(text)
+	tokens := g.Extractor.Extract(text)
 	var results GeoTextLocatorResults
 	usedTokens := make([]bool, len(tokens))
 
 	//Find countries
 	for i, r := range tokens {
 		lower := strings.ToLower(r)
-		country := g.countryMap[lower]
+		country := g.CountryMap[lower]
 		if country != nil {
 			results.Countries = append(results.Countries, country[0])
 			usedTokens[i] = true
@@ -188,7 +198,7 @@ func (g GeoTextLocator) ExtractGeoLocation(text string) GeoTextLocatorResults {
 MatchCountry on the token
 */
 func (g GeoTextLocator) MatchCountry(token string) (Location, error) {
-	value := g.countryMap[strings.ToLower(token)]
+	value := g.CountryMap[strings.ToLower(token)]
 
 	if value != nil {
 		return value[0], nil
@@ -205,7 +215,7 @@ func (g GeoTextLocator) MatchCity(token string, countryResults []Location) (Loca
 
 	//Find a city using the countries that was detected earlier
 	for _, v := range countryResults {
-		location, present := g.FindCity(lowerToken, v.countryCode)
+		location, present := g.FindCity(lowerToken, v.CountryCode)
 		if present == true {
 			return location, true
 		}
@@ -215,11 +225,11 @@ func (g GeoTextLocator) MatchCity(token string, countryResults []Location) (Loca
 	defaultCity, present := g.MatchDefaultCity(lowerToken)
 
 	if present {
-		return g.FindCity(defaultCity.name, defaultCity.country)
+		return g.FindCity(defaultCity.Name, defaultCity.Country)
 	}
 
 	//Match based on City
-	cities := g.citiesMap[token]
+	cities := g.CitiesMap[token]
 	if cities != nil && len(cities) > 0 {
 		firstCity := cities[0]
 		return firstCity, true
@@ -232,7 +242,7 @@ func (g GeoTextLocator) MatchCity(token string, countryResults []Location) (Loca
 MatchDefaultCity Match a default city
 */
 func (g GeoTextLocator) MatchDefaultCity(token string) (DefaultCity, bool) {
-	value, present := g.defaultCity[token]
+	value, present := g.DefaultCity[token]
 	return value, present
 }
 
@@ -241,9 +251,9 @@ FindCity
 Find City given the name and country
 */
 func (g GeoTextLocator) FindCity(name string, country string) (Location, bool) {
-	cities := g.citiesMap[name]
+	cities := g.CitiesMap[name]
 	for _, v := range cities {
-		if v.countryCode == country {
+		if v.CountryCode == country {
 			return v, true
 		}
 	}
@@ -255,13 +265,13 @@ func (g GeoTextLocator) FindCity(name string, country string) (Location, bool) {
 MatchCityCoutry match a city given a list of country
 */
 func (g GeoTextLocator) MatchCityCoutry(token string, countries []string) []Location {
-	cities, present := g.citiesMap[token]
+	cities, present := g.CitiesMap[token]
 	result := make([]Location, 0)
 
 	if present == true {
 		for _, value := range cities {
 			for _, c := range countries {
-				if value.countryCode == c {
+				if value.CountryCode == c {
 					result = append(result, value)
 				}
 			}
@@ -276,17 +286,17 @@ NewGeoTextLocator - Create new GeoTextLocator
 */
 func NewGeoTextLocator(e NERExtractor, countryFile string, citiesFiles string, defaultCity string) GeoTextLocator {
 	var a GeoTextLocator
-	a.extractor = e
+	a.Extractor = e
 	var err error
-	a.countryMap, err = ReadCsv(countryFile, ',', 3, 4, 5, 1)
+	a.CountryMap, err = ReadCsv(countryFile, ',', 3, 4, 5, 1)
 	if err != nil {
 		panic(err)
 	}
-	a.citiesMap, err = ReadCsv(citiesFiles, '\t', 4, 5, 2, 8)
+	a.CitiesMap, err = ReadCsv(citiesFiles, '\t', 4, 5, 2, 8)
 	if err != nil {
 		panic(err)
 	}
-	a.defaultCity, err = ReadCSVDefaultCity(defaultCity)
+	a.DefaultCity, err = ReadCSVDefaultCity(defaultCity)
 	if err != nil {
 		panic(err)
 	}
