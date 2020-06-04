@@ -35,10 +35,8 @@ func TestProse(t *testing.T) {
 }
 
 func TestGTLExtract(t *testing.T) {
-	var p Prose
-
 	var gtl GeoTextLocator
-	gtl = NewGeoTextLocator(p, "./data/alternateName.csv", "./data/cities500.txt", "./data/default_city.csv")
+	gtl = CreateDefaultGeoTextLocator("./data/alternateName.csv", "./data/cities500.txt", "./data/default_city.csv")
 
 	//Test Singapore
 	results := gtl.ExtractGeoLocation("Singaporeans and Singapore are one")
@@ -46,7 +44,7 @@ func TestGTLExtract(t *testing.T) {
 		t.Error("Results are wrong")
 	}
 
-	if results.Countries[0].countryCode != "SG" {
+	if results.Countries[0].CountryCode != "SG" {
 		t.Error("Country are wrong")
 	}
 
@@ -56,7 +54,7 @@ func TestGTLExtract(t *testing.T) {
 		t.Error("Results are wrong")
 	}
 
-	if results.Countries[0].countryCode != "MX" {
+	if results.Countries[0].CountryCode != "MX" {
 		t.Error("Country are wrong")
 	}
 
@@ -64,11 +62,11 @@ func TestGTLExtract(t *testing.T) {
 		t.Error("Results are wrong")
 	}
 
-	if results.Cities[0].name != "san diego" {
+	if results.Cities[0].Name != "san diego" {
 		t.Error("Results are wrong")
 	}
 
-	if results.Cities[0].countryCode != "MX" {
+	if results.Cities[0].CountryCode != "MX" {
 		t.Error("Results are wrong")
 	}
 
@@ -79,7 +77,7 @@ func TestGTLExtract(t *testing.T) {
 		t.Error("Results are wrong")
 	}
 
-	if results.Countries[0].countryCode != "SG" {
+	if results.Countries[0].CountryCode != "SG" {
 		t.Error("Country are wrong")
 	}
 
@@ -87,11 +85,11 @@ func TestGTLExtract(t *testing.T) {
 		t.Error("Results are wrong")
 	}
 
-	if results.Cities[0].name != "san diego" {
+	if results.Cities[0].Name != "san diego" {
 		t.Error("Results are wrong")
 	}
 
-	if results.Cities[0].countryCode != "US" {
+	if results.Cities[0].CountryCode != "US" {
 		t.Error("Results are wrong")
 	}
 
@@ -181,7 +179,7 @@ func TestMatchCityWithDefault(t *testing.T) {
 	location, _ := geoText.MatchCity("wellington", []Location{})
 
 	//Check for default
-	if location.countryCode == "NZ" {
+	if location.CountryCode == "NZ" {
 		fmt.Println(location)
 	} else {
 		t.Error("Cannot find city")
@@ -193,7 +191,7 @@ func TestMatchCityWithDefault(t *testing.T) {
 	}
 
 	//Check for default
-	if location.countryCode == "US" {
+	if location.CountryCode == "US" {
 		fmt.Println(location)
 	} else {
 		t.Error("Cannot find city")
@@ -219,7 +217,7 @@ func TestMatchCityCountry(t *testing.T) {
 
 	//Wellignton if given India
 	results := geoText.MatchCityCoutry("wellington", []string{"IN"})
-	if len(results) != 1 && results[0].countryCode == "IN" {
+	if len(results) != 1 && results[0].CountryCode == "IN" {
 		t.Error("Should be 1")
 	}
 
@@ -240,7 +238,7 @@ func TestFindCityCountry(t *testing.T) {
 	if present == false {
 		t.Error("City not found")
 	} else {
-		if city.name != "wellington" && city.countryCode != "NZ" {
+		if city.Name != "wellington" && city.CountryCode != "NZ" {
 			t.Error("Wrong City")
 		}
 	}
