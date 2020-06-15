@@ -13,7 +13,6 @@ package gogeotext
 import (
 	"encoding/csv"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -42,7 +41,6 @@ func (Prose) Extract(s string) []string {
 	doc, _ := prose.NewDocument(s)
 	results := []string{}
 	for _, ent := range doc.Entities() {
-		fmt.Println(ent.Text, ent.Label)
 		results = append(results, ent.Text)
 	}
 	return results
@@ -229,7 +227,7 @@ func (g GeoTextLocator) MatchCity(token string, countryResults []Location) (Loca
 	}
 
 	//Match based on City
-	cities := g.CitiesMap[token]
+	cities := g.CitiesMap[lowerToken]
 	if cities != nil && len(cities) > 0 {
 		firstCity := cities[0]
 		return firstCity, true

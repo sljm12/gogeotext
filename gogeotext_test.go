@@ -256,3 +256,24 @@ func TestPkgPath(t *testing.T) {
 	var p Prose
 	fmt.Println(reflect.TypeOf(p).PkgPath())
 }
+
+func runTest(geoText GeoTextLocator, p Prose, s string) {
+	a := p.Extract(s)
+	for _, v := range a {
+		fmt.Println(v)
+	}
+	r := geoText.ExtractGeoLocation(s)
+	fmt.Println(r)
+}
+
+func TestTest(t *testing.T) {
+	var p Prose
+
+	geoText := NewGeoTextLocator(p, "./data/alternateName.csv", "./data/cities500.txt", "./data/default_city.csv")
+	s := "As COVID-19 Outbreak Sweeps Through Classrooms, Israel Decides To Shutdown Schools With Even One Coronavirus Case - Swarajya"
+	runTest(geoText, p, s)
+	s = "Coronavirus outbreak: Beijing district on alert after new virus cluster | Watch News Videos Online - Globalnews.ca"
+	runTest(geoText, p, s)
+	s = "Outbreak set to stall tree plantation in Maharashtra - The Indian Express"
+	runTest(geoText, p, s)
+}
